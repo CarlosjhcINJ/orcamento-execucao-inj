@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Orçamento e Execução INJ | Dashboard Financeiro</title>
+<link rel="icon" href="logo-inj.png"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--azul:#1a3a6b;--azul2:#1e5fa8;--verde:#2e7d32;--dourado:#f9a825;--dourado2:#ffd54f;--vermelho:#c62828;--cinza:#f4f6fb;--branco:#fff;--texto:#1c2a3a;--sombra:0 4px 18px rgba(26,58,107,.13);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Segoe UI",Arial,sans-serif;background:var(--cinza);color:var(--texto);}
+header{background:linear-gradient(135deg,var(--azul) 0%,var(--azul2) 60%,#0d47a1 100%);color:#fff;padding:22px 40px;display:flex;align-items:center;gap:24px;box-shadow:0 4px 20px rgba(0,0,0,.3);position:relative;overflow:hidden;flex-wrap:wrap;}
+header::after{content:"";position:absolute;right:-60px;top:-60px;width:300px;height:300px;background:rgba(255,255,255,.04);border-radius:50%;}
+.logo-wrap img{width:92px;height:92px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4));}
+.header-text h1{font-size:1.55rem;font-weight:800;line-height:1.15;text-shadow:0 2px 6px rgba(0,0,0,.25);}
+.header-text h1 span{color:var(--dourado2);}
+.header-text h2{font-size:.85rem;font-weight:400;opacity:.85;margin-top:4px;letter-spacing:1.2px;text-transform:uppercase;}
+.header-text p{font-size:.74rem;opacity:.65;margin-top:5px;}
+.ano-select-wrap{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.ano-select-wrap label{font-size:.72rem;text-transform:uppercase;letter-spacing:1px;opacity:.8;}
+#seletorAno{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:8px 14px;font-weight:700;font-size:.95rem;cursor:pointer;}
+#seletorAno option{color:#1c2a3a;}
+.sync-bar{background:#1565c0;color:#fff;padding:10px 40px;display:flex;align-items:center;gap:16px;font-size:.85rem;flex-wrap:wrap;}
+.sync-bar a,.sync-bar button{padding:6px 18px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:.82rem;text-decoration:none;display:inline-block;}
+.btn-sync{background:var(--dourado);color:var(--azul);}
+.btn-editar{background:rgba(255,255,255,.18);color:#fff;}
+.sync-status{font-size:.78rem;opacity:.9;}
+.sync-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#4caf50;margin-right:6px;animation:pulse 2s infinite;}
+.sync-dot.offline{background:#ff5722;animation:none;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.loading-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(26,58,107,.7);z-index:999;align-items:center;justify-content:center;flex-direction:column;color:#fff;}
+.loading-overlay.show{display:flex;}
+.spinner{width:50px;height:50px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+main{padding:28px 40px;max-width:1440px;margin:0 auto;}
+.erro-box{display:none;background:#ffebee;border:1px solid #ef9a9a;color:#b71c1c;padding:16px 20px;border-radius:10px;margin-bottom:20px;font-size:.9rem;}
+.erro-box.show{display:block;}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:24px;}
+.kpi{background:var(--branco);border-radius:16px;padding:20px 22px;box-shadow:var(--sombra);border-top:4px solid var(--azul2);}
+.kpi.verde{border-top-color:var(--verde);}.kpi.dourado{border-top-color:var(--dourado);}.kpi.roxo{border-top-color:#6a1b9a;}.kpi.laranja{border-top-color:#e65100;}.kpi.vermelho{border-top-color:var(--vermelho);}
+.kpi-icon{font-size:1.7rem;margin-bottom:6px;}.kpi-label{font-size:.68rem;text-transform:uppercase;letter-spacing:1.1px;color:#607d8b;font-weight:700;}
+.kpi-value{font-size:1.42rem;font-weight:800;color:var(--azul);margin-top:4px;line-height:1.15;}.kpi-sub{font-size:.72rem;color:#78909c;margin-top:6px;line-height:1.3;}
+.section-title{font-size:.95rem;font-weight:700;color:var(--azul);text-transform:uppercase;letter-spacing:1.5px;margin:30px 0 14px;padding-left:12px;border-left:4px solid var(--dourado);display:flex;align-items:center;gap:10px;}
+.section-title small{font-weight:400;text-transform:none;letter-spacing:0;color:#78909c;font-size:.75rem;}
+.balanco-card{background:linear-gradient(135deg,var(--azul) 0%,#0d47a1 100%);color:#fff;border-radius:16px;padding:26px 30px;box-shadow:var(--sombra);display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:22px;margin-bottom:8px;}
+.balanco-item{text-align:center;}.bl-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1.3px;opacity:.7;margin-bottom:5px;}.bl-value{font-size:1.7rem;font-weight:800;}
+.bl-value.entrada{color:var(--dourado2);}.bl-value.saida{color:#ef9a9a;}.bl-value.super{color:#a5d6a7;}
+.projecao-card{background:linear-gradient(135deg,#fff8e1 0%,#fffde7 100%);border:1px solid #ffe082;border-radius:16px;padding:24px 28px;box-shadow:var(--sombra);display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:22px;}
+.proj-item{}.proj-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1.2px;color:#8d6e00;font-weight:700;margin-bottom:6px;}
+.proj-value{font-size:1.35rem;font-weight:800;color:var(--azul);}
+.proj-sub{font-size:.75rem;color:#795548;margin-top:4px;}
+.proj-nota{grid-column:1/-1;font-size:.75rem;color:#795548;border-top:1px dashed #ffca28;padding-top:12px;margin-top:2px;}
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:22px;margin-bottom:22px;}
+.chart-card{background:var(--branco);border-radius:16px;padding:22px;box-shadow:var(--sombra);}
+.chart-card h3{font-size:.82rem;text-transform:uppercase;letter-spacing:1px;color:#546e7a;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.chart-card h3::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--dourado);display:inline-block;flex-shrink:0;}
+.chart-wrap{position:relative;height:280px;}.chart-wrap.tall{height:420px;}.chart-wrap.media{height:330px;}
+table{width:100%;border-collapse:collapse;font-size:.82rem;}
+th{background:var(--azul);color:#fff;padding:10px 13px;text-align:left;font-weight:600;font-size:.74rem;text-transform:uppercase;white-space:nowrap;}
+th:first-child{border-radius:8px 0 0 0;}th:last-child{border-radius:0 8px 0 0;}
+td{padding:9px 13px;border-bottom:1px solid #eceff1;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}tr:nth-child(even) td{background:#f9fbfd;}tr:hover td{background:#e8f0fe;}
+.td-num{text-align:right;font-weight:600;font-family:"Consolas",monospace;white-space:nowrap;}
+.tag{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.68rem;font-weight:700;white-space:nowrap;}
+.tag-ok{background:#e8f5e9;color:#2e7d32;}.tag-pend{background:#fff3e0;color:#e65100;}.tag-exec{background:#e3f2fd;color:#1565c0;}.tag-alerta{background:#ffebee;color:#c62828;}.tag-neutro{background:#eceff1;color:#546e7a;}
+.mini-bar-bg{background:#e8edf2;border-radius:99px;height:7px;width:90px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px;}
+.mini-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--azul2),var(--dourado));}
+.mini-bar-fill.completo{background:linear-gradient(90deg,var(--verde),#66bb6a);}
+.mini-bar-fill.excesso{background:linear-gradient(90deg,#e65100,var(--vermelho));}
+footer{text-align:center;padding:22px 40px;font-size:.73rem;color:#90a4ae;border-top:1px solid #e0e7ef;margin-top:14px;}
+footer strong{color:var(--azul2);}
+@media(max-width:700px){header{padding:18px;}.sync-bar{padding:10px 18px;}main{padding:18px 14px;}.chart-grid{grid-template-columns:1fr;}.ano-select-wrap{margin-left:0;width:100%;justify-content:flex-end;}}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div>Sincronizando com Google Sheets...</div>
+</div>
+
+<header>
+  <div class="logo-wrap"><img src="logo-inj.png" alt="Igreja do Nome de Jesus"/></div>
+  <div class="header-text">
+    <h1>Orçamento &amp; Execução <span>INJ</span></h1>
+    <h2>Tesouraria &middot; Secretaria Nacional INJ Brasil</h2>
+    <p id="ultimaAtualizacao">Carregando dados da planilha...</p>
+  </div>
+  <div class="ano-select-wrap">
+    <label for="seletorAno">Ano orçamentário</label>
+    <select id="seletorAno" onchange="carregarAno(this.value)"></select>
+  </div>
+</header>
+
+<div class="sync-bar">
+  <span><span class="sync-dot" id="syncDot"></span><span id="syncTexto">Conectando ao Google Sheets...</span></span>
+  <button class="btn-sync" onclick="carregarAno(anoSelecionado)">&#128260; Atualizar agora</button>
+  <a class="btn-editar" id="linkEditar" href="#" target="_blank" rel="noopener">&#9999;&#65039; Editar dados na planilha</a>
+  <span class="sync-status">Os valores são preenchidos na planilha do Google Sheets e refletidos aqui automaticamente.</span>
+</div>
+
+<main>
+  <div class="erro-box" id="erroBox"></div>
+
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="balanco-card" id="balancoCard"></div>
+
+  <div class="section-title">&#128302; Projeção de Fechamento do Ano <small id="notaProjecao"></small></div>
+  <div class="projecao-card" id="projecaoCard"></div>
+
+  <div class="section-title">Evolução Mensal &mdash; Entradas, Saídas e Saldo</div>
+  <div class="chart-grid">
+    <div class="chart-card" style="grid-column:1/-1"><h3>Evolução ao Longo do Ano (com projeção para os meses restantes)</h3><div class="chart-wrap media"><canvas id="chartEvolucao"></canvas></div></div>
+  </div>
+
+  <div class="section-title">Composição do Orçamento</div>
+  <div class="chart-grid">
+    <div class="chart-card"><h3>Origem das Entradas (categorias)</h3><div class="chart-wrap"><canvas id="chartCatEntrada"></canvas></div></div>
+    <div class="chart-card"><h3>Despesas por Categoria</h3><div class="chart-wrap"><canvas id="chartCatSaida"></canvas></div></div>
+  </div>
+
+  <div class="section-title">Orçado x Realizado por Categoria</div>
+  <div class="chart-grid">
+    <div class="chart-card"><h3>Entradas: Orçado x Realizado</h3><div class="chart-wrap"><canvas id="chartOrcRealEntrada"></canvas></div></div>
+    <div class="chart-card"><h3>Saídas: Orçado x Realizado</h3><div class="chart-wrap"><canvas id="chartOrcRealSaida"></canvas></div></div>
+  </div>
+
+  <div class="section-title">Ranking de Despesas Orçadas</div>
+  <div class="chart-card" style="margin-bottom:22px"><div class="chart-wrap tall"><canvas id="chartRanking"></canvas></div></div>
+
+  <div class="section-title">Detalhamento &mdash; Entradas</div>
+  <div class="chart-card" style="margin-bottom:22px;overflow-x:auto;">
+    <table><thead><tr><th>Nº</th><th>Item</th><th class="td-num">Orçado Anual</th><th class="td-num">Realizado (YTD)</th><th>% Realizado</th><th>Status</th></tr></thead>
+    <tbody id="tabelaEntradas"></tbody></table>
+  </div>
+
+  <div class="section-title">Detalhamento &mdash; Saídas</div>
+  <div class="chart-card" style="overflow-x:auto;">
+    <table><thead><tr><th>Nº</th><th>Item</th><th class="td-num">Orçado Anual</th><th class="td-num">Executado (YTD)</th><th class="td-num">Saldo a Executar</th><th>% Executado</th><th>Status</th></tr></thead>
+    <tbody id="tabelaSaidas"></tbody></table>
+  </div>
+</main>
+
+<footer>
+  <strong>Igreja do Nome de Jesus &mdash; INJ Brasil</strong> &nbsp;&middot;&nbsp;
+  Dashboard de Orçamento &amp; Execução &nbsp;&middot;&nbsp;
+  "Um só Senhor, uma só fé, um só batismo." &nbsp;&middot;&nbsp; Ef 4:5
+</footer>
+
+<script>
+// ── CONFIGURAÇÃO ────────────────────────────────────────────────────────────
+// Para acrescentar um novo ano orçamentário: duplique a planilha modelo no
+// Google Sheets (mantendo as abas por mês: Janeiro, Fevereiro, ...), compartilhe
+// como "Qualquer pessoa com o link pode ver" e acrescente uma linha aqui embaixo.
+const CONFIG = {
+  anos: {
+    2026: { sheetId: "1t9lsG5CAJqHjrJ0VyjvPLcetOZaMtfr3z6K_Yb6xhCE" }
+  },
+  meses: ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"],
+  mesesAbrev: ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"],
+  categoriasEntrada: [
+    { nome: "Dízimos", re: /D[ií]zimo/i },
+    { nome: "Ofertas", re: /Oferta/i },
+    { nome: "Contribuições e Sócios", re: /Contribui|S[oó]cio\s*Mission/i },
+    { nome: "Outras Receitas", re: /.*/ }
+  ],
+  categoriasSaida: [
+    { nome: "Pastores e Diretoria", re: /Pastor|Diretoria|Representa[çc][ãa]o/i },
+    { nome: "Administrativo", re: /[Aa]dministrativ|banc[aá]ria|cartorai|imobili[aá]rio|Manuten[çc][ãa]o|Tarifa|^Outros$|Imprevisto/i },
+    { nome: "Departamentos", re: /Departamento/i },
+    { nome: "Eventos e Missão", re: /Visita|Assembleia|Evangelismo|Congresso|Projeto|Transfer[êe]ncia|instrumento|Associa[çc][ãa]o/i },
+    { nome: "Outras Despesas", re: /.*/ }
+  ],
+  paleta: ["#1e5fa8","#f9a825","#2e7d32","#6a1b9a","#e65100","#00838f","#c62828","#558b2f","#4527a0","#00695c"]
+};
+
+let anoSelecionado = null;
+let estado = null;
+let chartInstances = {};
+
+const fmt = v => "R$ " + (Number(v)||0).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct1 = (a,b) => b ? ((a/b)*100).toFixed(1) : "0.0";
+
+function parseCSVRow(row) {
+  const result = [];
+  let cur = "", inQ = false;
+  for (let i = 0; i < row.length; i++) {
+    const c = row[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+function parseValor(v) {
+  if (v === undefined || v === null) return 0;
+  let s = String(v).trim().replace(/R\$\s*/gi, "").trim();
+  if (s === "" || s === "-") return 0;
+  s = s.replace(/\./g, "").replace(",", ".");
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+async function fetchAba(sheetId, nomeAba) {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(nomeAba)}&t=${Date.now()}`;
+  const resp = await fetch(url);
+  if (!resp.ok) return null;
+  const csv = await resp.text();
+  const linhas = csv.split(/\r?\n/).filter(l => l.length).map(parseCSVRow);
+  const headerIdx = linhas.findIndex(l => (l[0]||"").trim() !== "" && (l[1]||"").trim().toUpperCase() === "ITENS");
+  if (headerIdx === -1) return null;
+  const header = linhas[headerIdx];
+  const headerText = header.join("|").toUpperCase();
+  if (!headerText.includes(nomeAba.toUpperCase())) return null;
+  return { header, linhas: linhas.slice(headerIdx + 1) };
+}
+
+function processarAba(aba) {
+  const header = aba.header;
+  const idxBudget = 4, idxMedia = 5;
+  const idxTotal = header.findIndex(h => (h||"").trim().toUpperCase() === "TOTAL");
+  const idxComment = header.findIndex(h => (h||"").toUpperCase().includes("COMENTARIO"));
+  const fimMeses = idxTotal > -1 ? idxTotal : header.length;
+  const colunasMeses = [];
+  for (let i = 6; i < fimMeses; i++) {
+    if ((header[i]||"").trim()) colunasMeses.push({ nome: header[i].trim(), idx: i });
+  }
+
+  const entradas = [], saidas = [];
+  const totais = {};
+  const balanco = {};
+  let secao = "entrada";
+
+  for (const linha of aba.linhas) {
+    const col0 = (linha[0]||"").trim();
+    const col1 = (linha[1]||"").trim();
+    if (col0 === "" && col1.toUpperCase() === "ITENS") { secao = "saida"; continue; }
+    if (col1.toUpperCase().includes("BALAN")) { secao = "balanco"; continue; }
+
+    if (secao === "balanco") {
+      const chave = col1.toUpperCase();
+      const valor = parseValor(linha[idxBudget]);
+      if (chave.includes("SALDO ANTERIOR")) balanco.saldoAnterior = valor;
+      else if (chave === "ENTRADAS") balanco.entradasMes = valor;
+      else if (chave === "SAIDAS" || chave === "SAÍDAS") balanco.saidasMes = valor;
+      else if (chave === "SUPERAVIT" || chave === "SUPERÁVIT") balanco.superavit = valor;
+      else if (chave === "DEFICIT" || chave === "DÉFICIT") balanco.deficit = valor;
+      else if (chave === "TOTAL") balanco.saldoCaixa = valor;
+      continue;
+    }
+
+    if (col1.toUpperCase() === "TOTAL") {
+      totais[secao] = {
+        budget: parseValor(linha[idxBudget]),
+        media: parseValor(linha[idxMedia]),
+        meses: colunasMeses.map(c => parseValor(linha[c.idx])),
+        total: idxTotal > -1 ? parseValor(linha[idxTotal]) : colunasMeses.reduce((s,c)=>s+parseValor(linha[c.idx]),0)
+      };
+      continue;
+    }
+    if (col0 === "" || isNaN(parseInt(col0))) continue;
+
+    const item = {
+      n: col0, nome: col1,
+      budget: parseValor(linha[idxBudget]),
+      media: parseValor(linha[idxMedia]),
+      meses: colunasMeses.map(c => parseValor(linha[c.idx])),
+      comentario: idxComment > -1 ? (linha[idxComment]||"").trim() : ""
+    };
+    item.total = idxTotal > -1 ? parseValor(linha[idxTotal]) : item.meses.reduce((s,v)=>s+v,0);
+
+    if (secao === "entrada") entradas.push(item);
+    else if (secao === "saida") saidas.push(item);
+  }
+
+  return { colunasMeses, entradas, saidas, totais, balanco };
+}
+
+function categorizar(nome, categorias) {
+  for (const c of categorias) if (c.re.test(nome)) return c.nome;
+  return "Outros";
+}
+
+function agruparPorCategoria(items, categorias, campo) {
+  const mapa = {};
+  items.forEach(it => { const cat = categorizar(it.nome, categorias); mapa[cat] = (mapa[cat]||0) + it[campo]; });
+  return mapa;
+}
+
+// ── ORQUESTRAÇÃO ─────────────────────────────────────────────────────────────
+function popularSeletorAno() {
+  const sel = document.getElementById("seletorAno");
+  const anos = Object.keys(CONFIG.anos).sort((a,b)=>b-a);
+  sel.innerHTML = anos.map(a => `<option value="${a}">${a}</option>`).join("");
+  anoSelecionado = anos[0];
+}
+
+async function carregarAno(ano) {
+  ano = String(ano);
+  anoSelecionado = ano;
+  document.getElementById("seletorAno").value = ano;
+  document.getElementById("loadingOverlay").classList.add("show");
+  document.getElementById("syncTexto").textContent = "Sincronizando...";
+  document.getElementById("syncDot").className = "sync-dot offline";
+  document.getElementById("erroBox").classList.remove("show");
+
+  const cfg = CONFIG.anos[ano];
+  document.getElementById("linkEditar").href = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/edit`;
+
+  try {
+    const resultados = await Promise.all(CONFIG.meses.map(m => fetchAba(cfg.sheetId, m).catch(() => null)));
+    const validos = [];
+    resultados.forEach((aba, i) => { if (aba) validos.push({ aba, mes: CONFIG.meses[i], idx: i }); });
+    if (validos.length === 0) throw new Error(`Nenhum mês com dados encontrado na planilha de ${ano}. Verifique se as abas mensais existem e se o compartilhamento está como "Qualquer pessoa com o link pode ver".`);
+
+    const ultimo = validos[validos.length - 1];
+    const dados = processarAba(ultimo.aba);
+    estado = { ano, mesAtual: ultimo.mes, mesIdx: ultimo.idx, ...dados };
+
+    renderTudo();
+    const agora = new Date().toLocaleString("pt-BR");
+    document.getElementById("ultimaAtualizacao").textContent = `Dados oficiais até ${ultimo.mes}/${ano} · Última sincronização: ${agora}`;
+    document.getElementById("syncTexto").textContent = `✅ Sincronizado às ${agora}`;
+    document.getElementById("syncDot").className = "sync-dot";
+  } catch (e) {
+    document.getElementById("syncTexto").textContent = "⚠️ Falha na sincronização";
+    document.getElementById("syncDot").className = "sync-dot offline";
+    const box = document.getElementById("erroBox");
+    box.textContent = "⚠️ " + e.message;
+    box.classList.add("show");
+  } finally {
+    document.getElementById("loadingOverlay").classList.remove("show");
+  }
+}
+
+// ── CÁLCULOS ─────────────────────────────────────────────────────────────────
+function calcularResumo() {
+  const { totais, colunasMeses } = estado;
+  const orcadoEntrada = totais.entrada.budget, orcadoSaida = totais.saida.budget;
+  const realEntrada = totais.entrada.total, realSaida = totais.saida.total;
+  const nMeses = colunasMeses.length;
+  const mediaRealEntrada = nMeses ? realEntrada / nMeses : 0;
+  const mediaRealSaida = nMeses ? realSaida / nMeses : 0;
+  return {
+    orcadoEntrada, orcadoSaida, realEntrada, realSaida, nMeses,
+    mediaRealEntrada, mediaRealSaida,
+    projEntrada: mediaRealEntrada * 12,
+    projSaida: mediaRealSaida * 12
+  };
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function renderTudo() {
+  renderKPIs();
+  renderBalanco();
+  renderProjecao();
+  renderGraficoEvolucao();
+  renderGraficosCategoria();
+  renderGraficosOrcRealizado();
+  renderRanking();
+  renderTabelaEntradas();
+  renderTabelaSaidas();
+}
+
+function renderKPIs() {
+  const r = calcularResumo();
+  const saldoPeriodo = r.realEntrada - r.realSaida;
+  const pctAnoDecorrido = (r.nMeses / 12) * 100;
+  const pctSaidaExec = r.orcadoSaida ? (r.realSaida / r.orcadoSaida) * 100 : 0;
+  const diff = pctSaidaExec - pctAnoDecorrido;
+  let ritmoTexto, ritmoClasse;
+  if (diff > 5) { ritmoTexto = "Acima do ritmo — atenção aos gastos"; ritmoClasse = "vermelho"; }
+  else if (diff < -5) { ritmoTexto = "Abaixo do ritmo — margem de economia"; ritmoClasse = "verde"; }
+  else { ritmoTexto = "Dentro do ritmo esperado"; ritmoClasse = ""; }
+
+  const cards = [
+    { icon:"💰", label:"Entradas Realizadas (YTD)", value:fmt(r.realEntrada), sub:`${pct1(r.realEntrada,r.orcadoEntrada)}% do orçado anual (${fmt(r.orcadoEntrada)})`, cls:"" },
+    { icon:"📤", label:"Saídas Realizadas (YTD)", value:fmt(r.realSaida), sub:`${pct1(r.realSaida,r.orcadoSaida)}% do orçado anual (${fmt(r.orcadoSaida)})`, cls:"verde" },
+    { icon:"⚖️", label:"Saldo do Período", value:fmt(saldoPeriodo), sub: saldoPeriodo>=0 ? "Superávit no acumulado ✓" : "Déficit no acumulado ⚠️", cls: saldoPeriodo>=0?"dourado":"vermelho" },
+    { icon:"🏦", label:"Saldo em Caixa", value: estado.balanco.saldoCaixa!==undefined ? fmt(estado.balanco.saldoCaixa) : "—", sub:`Posição em ${estado.mesAtual}/${estado.ano}`, cls:"roxo" },
+    { icon:"📊", label:"Meses Fechados", value:`${r.nMeses} / 12`, sub:`${pctAnoDecorrido.toFixed(0)}% do ano decorrido`, cls:"laranja" },
+    { icon:"🚦", label:"Ritmo do Orçamento", value:`${pctSaidaExec.toFixed(1)}%`, sub:ritmoTexto, cls:ritmoClasse }
+  ];
+  document.getElementById("kpiGrid").innerHTML = cards.map(c => `
+    <div class="kpi ${c.cls}"><div class="kpi-icon">${c.icon}</div><div class="kpi-label">${c.label}</div>
+    <div class="kpi-value">${c.value}</div><div class="kpi-sub">${c.sub}</div></div>`).join("");
+}
+
+function renderBalanco() {
+  const b = estado.balanco;
+  const resultado = (b.entradasMes||0) - (b.saidasMes||0);
+  document.getElementById("balancoCard").innerHTML = `
+    <div class="balanco-item"><div class="bl-label">Entradas de ${estado.mesAtual}</div><div class="bl-value entrada">${fmt(b.entradasMes||0)}</div></div>
+    <div class="balanco-item"><div class="bl-label">Saídas de ${estado.mesAtual}</div><div class="bl-value saida">${fmt(b.saidasMes||0)}</div></div>
+    <div class="balanco-item"><div class="bl-label">Resultado do Mês</div><div class="bl-value super">${fmt(resultado)}</div></div>
+    <div class="balanco-item"><div class="bl-label">Saldo em Caixa</div><div class="bl-value" style="color:#90caf9">${b.saldoCaixa!==undefined?fmt(b.saldoCaixa):"—"}</div></div>`;
+}
+
+function renderProjecao() {
+  const r = calcularResumo();
+  document.getElementById("notaProjecao").textContent = `— com base no ritmo médio dos ${r.nMeses} meses já fechados`;
+  const varE = r.projEntrada - r.orcadoEntrada, varS = r.projSaida - r.orcadoSaida;
+  const saldoProj = r.projEntrada - r.projSaida;
+  document.getElementById("projecaoCard").innerHTML = `
+    <div class="proj-item"><div class="proj-label">Entradas Projetadas</div><div class="proj-value">${fmt(r.projEntrada)}</div>
+      <div class="proj-sub">${varE>=0?"▲":"▼"} ${fmt(Math.abs(varE))} vs. orçado (${pct1(r.projEntrada,r.orcadoEntrada)}%)</div></div>
+    <div class="proj-item"><div class="proj-label">Saídas Projetadas</div><div class="proj-value">${fmt(r.projSaida)}</div>
+      <div class="proj-sub">${varS>=0?"▲":"▼"} ${fmt(Math.abs(varS))} vs. orçado (${pct1(r.projSaida,r.orcadoSaida)}%)</div></div>
+    <div class="proj-item"><div class="proj-label">Resultado Projetado do Ano</div><div class="proj-value" style="color:${saldoProj>=0?'#2e7d32':'#c62828'}">${fmt(saldoProj)}</div>
+      <div class="proj-sub">${saldoProj>=0?"Fechamento superavitário projetado":"Fechamento deficitário projetado — atenção"}</div></div>
+    <div class="proj-nota">Projeção linear simples: repete a média mensal já realizada (${fmt(r.mediaRealEntrada)} de entradas e ${fmt(r.mediaRealSaida)} de saídas) para os ${12-r.nMeses} meses restantes do ano.</div>`;
+}
+
+function mkChart(id, cfg) {
+  if (chartInstances[id]) chartInstances[id].destroy();
+  chartInstances[id] = new Chart(document.getElementById(id), cfg);
+}
+
+function renderGraficoEvolucao() {
+  const { totais, mesIdx } = estado;
+  const nMeses = totais.entrada.meses.length;
+  const labels = CONFIG.mesesAbrev;
+  const entradaReal = CONFIG.mesesAbrev.map((_,i) => i < nMeses ? totais.entrada.meses[i] : null);
+  const saidaReal = CONFIG.mesesAbrev.map((_,i) => i < nMeses ? totais.saida.meses[i] : null);
+  const mediaEntrada = nMeses ? totais.entrada.meses.reduce((s,v)=>s+v,0)/nMeses : 0;
+  const mediaSaida = nMeses ? totais.saida.meses.reduce((s,v)=>s+v,0)/nMeses : 0;
+  const entradaProj = CONFIG.mesesAbrev.map((_,i) => i >= nMeses ? mediaEntrada : null);
+  const saidaProj = CONFIG.mesesAbrev.map((_,i) => i >= nMeses ? mediaSaida : null);
+
+  let acumulado = 0;
+  const saldoReal = CONFIG.mesesAbrev.map((_,i) => {
+    if (i >= nMeses) return null;
+    acumulado += (totais.entrada.meses[i] - totais.saida.meses[i]);
+    return acumulado;
+  });
+  const saldoProj = CONFIG.mesesAbrev.map((_,i) => {
+    if (i < nMeses - 1) return null;
+    if (i === nMeses - 1) return saldoReal[i];
+    acumulado += (mediaEntrada - mediaSaida);
+    return acumulado;
+  });
+
+  mkChart("chartEvolucao", { type:"bar", data:{ labels, datasets:[
+    { type:"bar", label:"Entradas", data:entradaReal, backgroundColor:"#1e5fa8", borderRadius:6, order:2 },
+    { type:"bar", label:"Saídas", data:saidaReal, backgroundColor:"#e65100", borderRadius:6, order:2 },
+    { type:"bar", label:"Entradas (projeção)", data:entradaProj, backgroundColor:"rgba(30,95,168,.35)", borderRadius:6, order:2 },
+    { type:"bar", label:"Saídas (projeção)", data:saidaProj, backgroundColor:"rgba(230,81,0,.35)", borderRadius:6, order:2 },
+    { type:"line", label:"Saldo Acumulado", data:saldoReal, borderColor:"#2e7d32", backgroundColor:"#2e7d32", borderWidth:3, tension:.3, yAxisID:"y1", pointRadius:3, order:1 },
+    { type:"line", label:"Saldo Acumulado (projeção)", data:saldoProj, borderColor:"#2e7d32", borderDash:[6,4], borderWidth:2, tension:.3, yAxisID:"y1", pointRadius:2, order:1 }
+  ]}, options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:"bottom", labels:{ font:{size:10}, boxWidth:12, padding:8 } } },
+    scales:{
+      y:{ beginAtZero:true, ticks:{ callback:v=>"R$ "+v.toLocaleString("pt-BR") } },
+      y1:{ position:"right", grid:{ drawOnChartArea:false }, ticks:{ callback:v=>"R$ "+v.toLocaleString("pt-BR") } }
+    }
+  }});
+}
+
+function renderGraficosCategoria() {
+  const { entradas, saidas } = estado;
+  const mapaE = agruparPorCategoria(entradas, CONFIG.categoriasEntrada, "total");
+  const mapaS = agruparPorCategoria(saidas, CONFIG.categoriasSaida, "total");
+  const donutOpts = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:"bottom", labels:{ font:{size:10}, boxWidth:12, padding:6 } },
+    tooltip:{ callbacks:{ label:ctx => ` ${fmt(ctx.parsed)}` } } } };
+
+  mkChart("chartCatEntrada", { type:"doughnut", data:{ labels:Object.keys(mapaE), datasets:[{ data:Object.values(mapaE), backgroundColor:CONFIG.paleta, borderWidth:2, borderColor:"#fff" }] }, options:donutOpts });
+  mkChart("chartCatSaida", { type:"doughnut", data:{ labels:Object.keys(mapaS), datasets:[{ data:Object.values(mapaS), backgroundColor:CONFIG.paleta, borderWidth:2, borderColor:"#fff" }] }, options:donutOpts });
+}
+
+function renderGraficosOrcRealizado() {
+  const { entradas, saidas } = estado;
+  const mapaEOrc = agruparPorCategoria(entradas, CONFIG.categoriasEntrada, "budget");
+  const mapaEReal = agruparPorCategoria(entradas, CONFIG.categoriasEntrada, "total");
+  const mapaSOrc = agruparPorCategoria(saidas, CONFIG.categoriasSaida, "budget");
+  const mapaSReal = agruparPorCategoria(saidas, CONFIG.categoriasSaida, "total");
+  const barOpts = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:"top", labels:{ font:{size:10} } } },
+    scales:{ y:{ beginAtZero:true, ticks:{ callback:v=>"R$ "+v.toLocaleString("pt-BR") } }, x:{ ticks:{ font:{size:9} } } } };
+
+  mkChart("chartOrcRealEntrada", { type:"bar", data:{ labels:Object.keys(mapaEOrc), datasets:[
+    { label:"Orçado", data:Object.values(mapaEOrc), backgroundColor:"#90a4ae", borderRadius:6 },
+    { label:"Realizado", data:Object.values(mapaEReal), backgroundColor:"#1e5fa8", borderRadius:6 }
+  ]}, options:barOpts });
+
+  mkChart("chartOrcRealSaida", { type:"bar", data:{ labels:Object.keys(mapaSOrc), datasets:[
+    { label:"Orçado", data:Object.values(mapaSOrc), backgroundColor:"#90a4ae", borderRadius:6 },
+    { label:"Realizado", data:Object.values(mapaSReal), backgroundColor:"#e65100", borderRadius:6 }
+  ]}, options:barOpts });
+}
+
+function renderRanking() {
+  const sOrd = [...estado.saidas].sort((a,b) => b.budget - a.budget).slice(0, 15);
+  mkChart("chartRanking", { type:"bar", data:{ labels:sOrd.map(s=>s.nome), datasets:[
+    { label:"Orçado", data:sOrd.map(s=>s.budget), backgroundColor:"#90a4ae", borderRadius:6 },
+    { label:"Executado", data:sOrd.map(s=>s.total), backgroundColor:sOrd.map((_,i)=> i===0?"#1e5fa8":i===1?"#1565c0":i===2?"#f9a825":"#e65100"), borderRadius:6 }
+  ]}, options:{ indexAxis:"y", responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:"top" } },
+    scales:{ x:{ beginAtZero:true, ticks:{ callback:v=>"R$ "+v.toLocaleString("pt-BR") } }, y:{ ticks:{ font:{size:10} } } } } });
+}
+
+function tagStatus(comentario, secao) {
+  const c = (comentario||"").toLowerCase();
+  if (!c) return `<span class="tag tag-neutro">—</span>`;
+  if (c.includes("ótimo") || c.includes("otimo") || c.includes("bom")) return `<span class="tag tag-ok">${comentario}</span>`;
+  if (c.includes("abaixo")) return `<span class="tag tag-pend">${comentario}</span>`;
+  if (c.includes("acima")) return secao === "saida" ? `<span class="tag tag-alerta">${comentario}</span>` : `<span class="tag tag-ok">${comentario}</span>`;
+  return `<span class="tag tag-exec">${comentario}</span>`;
+}
+
+function renderTabelaEntradas() {
+  document.getElementById("tabelaEntradas").innerHTML = estado.entradas.map(e => {
+    const p = e.budget > 0 ? Math.min(100, Math.round(e.total/e.budget*100)) : 0;
+    const cls = p >= 100 ? "completo" : "";
+    return `<tr><td>${e.n}</td><td>${e.nome}</td>
+      <td class="td-num">${fmt(e.budget)}</td><td class="td-num">${fmt(e.total)}</td>
+      <td><span class="mini-bar-bg"><span class="mini-bar-fill ${cls}" style="width:${p}%"></span></span>${pct1(e.total,e.budget)}%</td>
+      <td>${tagStatus(e.comentario,"entrada")}</td></tr>`;
+  }).join("");
+}
+
+function renderTabelaSaidas() {
+  document.getElementById("tabelaSaidas").innerHTML = estado.saidas.map(s => {
+    const saldo = s.budget - s.total;
+    const p = s.budget > 0 ? Math.round(s.total/s.budget*100) : 0;
+    const cls = p >= 100 ? "excesso" : "";
+    return `<tr><td>${s.n}</td><td>${s.nome}</td>
+      <td class="td-num">${fmt(s.budget)}</td><td class="td-num">${fmt(s.total)}</td>
+      <td class="td-num" style="color:${saldo<0?'#c62828':'#2e7d32'}">${fmt(saldo)}</td>
+      <td><span class="mini-bar-bg"><span class="mini-bar-fill ${cls}" style="width:${Math.min(p,100)}%"></span></span>${p}%</td>
+      <td>${tagStatus(s.comentario,"saida")}</td></tr>`;
+  }).join("");
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+popularSeletorAno();
+carregarAno(anoSelecionado);
+setInterval(() => carregarAno(anoSelecionado), 5 * 60 * 1000);
+</script>
+</body>
+</html>
