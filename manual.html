@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Manual de Uso | Orçamento & Execução INJ</title>
+<link rel="icon" href="logo-inj.png"/>
+<style>
+:root{--azul:#1a3a6b;--azul2:#1e5fa8;--verde:#2e7d32;--dourado:#f9a825;--dourado2:#ffd54f;--cinza:#f4f6fb;--branco:#fff;--texto:#1c2a3a;--sombra:0 4px 18px rgba(26,58,107,.13);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Segoe UI",Arial,sans-serif;background:var(--cinza);color:var(--texto);line-height:1.55;}
+header{background:linear-gradient(135deg,var(--azul) 0%,var(--azul2) 60%,#0d47a1 100%);color:#fff;padding:26px 40px;display:flex;align-items:center;gap:22px;box-shadow:0 4px 20px rgba(0,0,0,.3);}
+header img{width:70px;height:70px;object-fit:contain;}
+header h1{font-size:1.5rem;font-weight:800;}
+header h1 span{color:var(--dourado2);}
+header p{font-size:.85rem;opacity:.85;margin-top:4px;}
+main{max-width:900px;margin:0 auto;padding:32px 24px 60px;}
+.indice{background:var(--branco);border-radius:14px;padding:22px 26px;box-shadow:var(--sombra);margin-bottom:28px;}
+.indice h2{font-size:.9rem;text-transform:uppercase;letter-spacing:1px;color:var(--azul);margin-bottom:12px;}
+.indice ol{padding-left:20px;font-size:.92rem;}
+.indice li{margin-bottom:6px;}
+.indice a{color:var(--azul2);text-decoration:none;font-weight:600;}
+section{background:var(--branco);border-radius:14px;padding:26px 28px;box-shadow:var(--sombra);margin-bottom:22px;}
+section h2{color:var(--azul);font-size:1.15rem;display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--dourado);}
+section h3{color:var(--azul2);font-size:.95rem;margin:18px 0 8px;}
+section p, section li{font-size:.92rem;color:var(--texto);}
+section ul, section ol{padding-left:22px;margin:8px 0 14px;}
+section li{margin-bottom:5px;}
+.passo{background:var(--cinza);border-left:4px solid var(--azul2);border-radius:0 8px 8px 0;padding:12px 16px;margin:12px 0;font-size:.9rem;}
+.dica{background:#fff8e1;border-left:4px solid var(--dourado);border-radius:0 8px 8px 0;padding:12px 16px;margin:12px 0;font-size:.9rem;}
+.dica strong{color:#8d6e00;}
+.alerta{background:#ffebee;border-left:4px solid #c62828;border-radius:0 8px 8px 0;padding:12px 16px;margin:12px 0;font-size:.9rem;}
+.alerta strong{color:#b71c1c;}
+code{background:#eceff1;padding:2px 7px;border-radius:5px;font-family:"Consolas",monospace;font-size:.85em;color:#37474f;}
+a.link-externo{color:var(--azul2);font-weight:700;word-break:break-all;}
+.kpi-exemplo{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:14px 0;}
+.kpi-exemplo div{background:var(--cinza);border-radius:10px;padding:12px 14px;border-top:3px solid var(--azul2);}
+.kpi-exemplo b{display:block;font-size:.68rem;text-transform:uppercase;color:#607d8b;letter-spacing:.5px;}
+.kpi-exemplo span{font-size:1rem;font-weight:800;color:var(--azul);}
+footer{text-align:center;padding:26px;font-size:.75rem;color:#90a4ae;}
+.voltar{display:inline-block;margin:24px 0 0;background:var(--azul2);color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:.85rem;}
+@media print{ body{background:#fff;} section,.indice{box-shadow:none;border:1px solid #ddd;} .voltar{display:none;} }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="logo-inj.png" alt="Igreja do Nome de Jesus"/>
+  <div>
+    <h1>Manual de Uso <span>— Orçamento & Execução INJ</span></h1>
+    <p>Guia rápido para a equipe da Tesouraria/Secretaria Nacional INJ Brasil</p>
+  </div>
+</header>
+
+<main>
+
+  <div class="indice">
+    <h2>Neste manual</h2>
+    <ol>
+      <li><a href="#visao-geral">Visão geral do sistema</a></li>
+      <li><a href="#lancar">Como lançar os dados do mês</a></li>
+      <li><a href="#fechar-mes">Como fechar o mês</a></li>
+      <li><a href="#dashboard">Como ler o dashboard</a></li>
+      <li><a href="#relatorio">Como gerar o relatório de prestação de contas</a></li>
+      <li><a href="#novo-ano">Como começar um novo ano</a></li>
+      <li><a href="#dicas">Dicas para aproveitar melhor</a></li>
+      <li><a href="#duvidas">Dúvidas comuns</a></li>
+    </ol>
+  </div>
+
+  <section id="visao-geral">
+    <h2>1. Visão geral do sistema</h2>
+    <p>O sistema tem duas partes que trabalham juntas:</p>
+    <ul>
+      <li><strong>A planilha do Google Sheets</strong> — é onde os valores de Entradas e Saídas são lançados todo mês. É a fonte oficial dos dados.</li>
+      <li><strong>O dashboard</strong> (site publicado) — lê a planilha automaticamente e mostra tudo em gráficos e indicadores, para facilitar a leitura e a tomada de decisão.</li>
+    </ul>
+    <p>Você <strong>não edita nada no dashboard</strong> — todo lançamento é feito na planilha (direto ou pela barra lateral). O dashboard só exibe e se atualiza sozinho.</p>
+    <div class="passo">🔗 Link do dashboard: <a class="link-externo" href="https://carlosjhcinj.github.io/orcamento-execucao-inj/" target="_blank">carlosjhcinj.github.io/orcamento-execucao-inj</a></div>
+  </section>
+
+  <section id="lancar">
+    <h2>2. Como lançar os dados do mês</h2>
+    <p>Existem duas formas de lançar um valor de Entrada ou Saída. Use a que for mais confortável:</p>
+
+    <h3>Opção A — Direto na planilha</h3>
+    <ol>
+      <li>Abra a planilha e clique na aba do mês atual (embaixo, ex: "Junho").</li>
+      <li>Encontre a linha do item (ex: "Dízimos Congregações") e digite o valor na coluna daquele mês.</li>
+    </ol>
+
+    <h3>Opção B — Pela barra lateral "Lançamento Rápido"</h3>
+    <ol>
+      <li>Na planilha, clique na aba do mês atual.</li>
+      <li>No menu superior, clique em <strong>🎨 Painel Financeiro → 💰 Lançamento Rápido (barra lateral)</strong>.</li>
+      <li>Escolha <strong>Entrada</strong> ou <strong>Saída</strong>, selecione o item na lista, digite o valor e clique em <strong>Salvar Lançamento</strong>.</li>
+    </ol>
+    <div class="dica"><strong>Dica:</strong> a barra lateral sempre lança no mês da aba que estiver aberta — confira o texto "Mês em edição" no topo da barra antes de salvar.</div>
+  </section>
+
+  <section id="fechar-mes">
+    <h2>3. Como fechar o mês e abrir o seguinte</h2>
+    <ol>
+      <li>Confira se todos os valores do mês foram lançados.</li>
+      <li>Clique com o botão direito na aba do mês atual (embaixo) → <strong>Duplicar</strong>.</li>
+      <li>Renomeie a nova aba com o nome do próximo mês (ex: de "Junho" duplicada vira "Julho").</li>
+      <li>Na aba nova, apague os valores do mês recém-criado na planilha (deixe em branco para preencher ao longo do mês) — mantenha os meses anteriores como estão.</li>
+      <li>No menu, rode <strong>🎨 Painel Financeiro → Formatar todas as abas</strong> para reformatar tudo.</li>
+    </ol>
+    <div class="alerta"><strong>Atenção:</strong> não apague nem renomeie os meses já fechados — o dashboard e o histórico dependem deles.</div>
+  </section>
+
+  <section id="dashboard">
+    <h2>4. Como ler o dashboard</h2>
+    <p>Ao abrir o link, digite a senha (peça ao responsável, se não souber). O dashboard mostra:</p>
+
+    <h3>Indicadores principais (KPIs)</h3>
+    <div class="kpi-exemplo">
+      <div><b>Entradas Realizadas</b><span>Quanto já entrou no ano</span></div>
+      <div><b>Saídas Realizadas</b><span>Quanto já saiu no ano</span></div>
+      <div><b>Saldo do Período</b><span>Entradas − Saídas até agora</span></div>
+      <div><b>Saldo em Caixa</b><span>Dinheiro disponível hoje</span></div>
+      <div><b>Meses Fechados</b><span>Quantos meses já lançados</span></div>
+      <div><b>Ritmo do Orçamento</b><span>Se está gastando rápido ou devagar demais</span></div>
+    </div>
+
+    <h3>Projeção de Fechamento do Ano</h3>
+    <p>Com base na média dos meses já fechados, o sistema calcula como as entradas e saídas devem terminar em dezembro — útil para decidir com antecedência se é preciso conter gastos ou se há espaço para investir mais em algum projeto.</p>
+
+    <h3>Gráficos e tabelas</h3>
+    <p>Evolução mês a mês, composição por categoria (Dízimos, Ofertas, Administrativo, etc.), ranking das maiores despesas, e tabelas detalhadas de cada item com o status (Ótimo, Bom, Abaixo previsto, Acima previsto) vindo direto da planilha.</p>
+  </section>
+
+  <section id="relatorio">
+    <h2>5. Como gerar o relatório de prestação de contas</h2>
+    <ol>
+      <li>No dashboard, clique em <strong>📄 Relatório Mensal</strong> (barra azul do topo).</li>
+      <li>Vai abrir a caixa de impressão do navegador com um relatório pronto: balanço do mês, entradas e saídas detalhadas, e linhas de assinatura para Tesoureiro(a) e Presidente/Pastor.</li>
+      <li>Escolha <strong>"Salvar como PDF"</strong> (ou imprima direto, se tiver impressora).</li>
+    </ol>
+  </section>
+
+  <section id="novo-ano">
+    <h2>6. Como começar um novo ano (ex: 2027)</h2>
+    <ol>
+      <li>Na planilha atual, vá em <strong>Arquivo → Fazer uma cópia</strong>.</li>
+      <li>Renomeie a cópia para o novo ano (ex: "Fechamento Mensal 2027") e apague os valores preenchidos, mantendo a estrutura das abas.</li>
+      <li>Compartilhe a nova planilha como <strong>"Qualquer pessoa com o link" → Leitor</strong>, e copie o ID dela (parte da URL entre <code>/d/</code> e <code>/edit</code>).</li>
+      <li>Peça para quem administra o dashboard acrescentar esse novo ano no arquivo do site (uma linha de configuração) — depois disso, o seletor de ano no topo do dashboard já mostra os dois anos.</li>
+    </ol>
+  </section>
+
+  <section id="dicas">
+    <h2>7. Dicas para aproveitar melhor</h2>
+    <div class="dica"><strong>Acompanhe o "Ritmo do Orçamento" toda semana.</strong> Se ele estiver muito acima do % do ano decorrido, é sinal de que as despesas estão avançando mais rápido que o esperado — vale revisar gastos não essenciais antes que vire um problema no fim do ano.</div>
+    <div class="dica"><strong>Use a Projeção de Fechamento para decisões, não só para conferência.</strong> Se a entrada projetada estiver bem acima do orçado, pode ser o momento de aprovar um investimento extra; se estiver abaixo, é hora de conter despesas variáveis.</div>
+    <div class="dica"><strong>Preencha o campo "Comentarios" na planilha</strong> (Previsto, Bom, Ótimo, Abaixo previsto, Acima previsto) com uma leitura honesta de cada item — isso já aparece automaticamente colorido no dashboard e ajuda quem só olha o painel a entender o contexto sem precisar abrir a planilha.</div>
+    <div class="dica"><strong>Gere o relatório mensal assim que fechar o mês</strong>, enquanto os números ainda estão "frescos" — facilita a prestação de contas na reunião seguinte.</div>
+  </section>
+
+  <section id="duvidas">
+    <h2>8. Dúvidas comuns</h2>
+    <p><strong>O dashboard não está mostrando o mês novo que acabei de lançar.</strong><br/>Espere alguns minutos (ele sincroniza sozinho a cada 5 min) ou clique em "🔄 Atualizar agora" no topo do dashboard.</p>
+    <p><strong>Esqueci a senha do dashboard.</strong><br/>Peça para quem administra o site verificar no arquivo <code>index.html</code> ou trocar por uma nova.</p>
+    <p><strong>Lancei um valor errado.</strong><br/>Corrija direto na célula da planilha (ou lance de novo pela barra lateral — o novo valor substitui o anterior) — não precisa fazer nada no dashboard.</p>
+    <p><strong>O menu "🎨 Painel Financeiro" sumiu da planilha.</strong><br/>Feche e abra a planilha de novo — o menu é recriado toda vez que ela é aberta.</p>
+  </section>
+
+  <a class="voltar" href="index.html">← Voltar para o Dashboard</a>
+</main>
+
+<footer>
+  <strong>Igreja do Nome de Jesus — INJ Brasil</strong> · Manual de Uso · "Um só Senhor, uma só fé, um só batismo."
+</footer>
+
+</body>
+</html>
