@@ -71,9 +71,37 @@ tr:last-child td{border-bottom:none;}tr:nth-child(even) td{background:#f9fbfd;}t
 footer{text-align:center;padding:22px 40px;font-size:.73rem;color:#90a4ae;border-top:1px solid #e0e7ef;margin-top:14px;}
 footer strong{color:var(--azul2);}
 @media(max-width:700px){header{padding:18px;}.sync-bar{padding:10px 18px;}main{padding:18px 14px;}.chart-grid{grid-template-columns:1fr;}.ano-select-wrap{margin-left:0;width:100%;justify-content:flex-end;}}
+#appContent{display:none;}
+#lockScreen{position:fixed;inset:0;background:linear-gradient(135deg,var(--azul) 0%,#0d47a1 100%);display:flex;align-items:center;justify-content:center;z-index:2000;}
+.lock-box{background:#fff;border-radius:16px;padding:40px 36px;max-width:340px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,.35);text-align:center;}
+.lock-box img{width:64px;margin-bottom:12px;}
+.lock-box h2{color:var(--azul);font-size:1.05rem;margin-bottom:4px;}
+.lock-box p{font-size:.78rem;color:#78909c;margin-bottom:18px;}
+.lock-box input{width:100%;padding:12px;border:1px solid #cfd8dc;border-radius:8px;font-size:1rem;text-align:center;letter-spacing:3px;box-sizing:border-box;}
+.lock-box button{width:100%;margin-top:14px;padding:12px;background:var(--dourado);color:var(--azul);border:none;border-radius:8px;font-weight:800;cursor:pointer;font-size:.92rem;}
+.lock-erro{color:var(--vermelho);font-size:.76rem;margin-top:10px;display:none;}
+#relatorioImpressao{display:none;}
+@media print{
+  body *{visibility:hidden;}
+  #relatorioImpressao, #relatorioImpressao *{visibility:visible;}
+  #relatorioImpressao{position:absolute;top:0;left:0;width:100%;display:block;}
+}
 </style>
 </head>
 <body>
+
+<div id="lockScreen">
+  <div class="lock-box">
+    <img src="logo-inj.png" alt="INJ"/>
+    <h2>Orçamento &amp; Execução INJ</h2>
+    <p>Área restrita &mdash; digite a senha para acessar o dashboard financeiro.</p>
+    <input type="password" id="senhaInput" placeholder="Senha" onkeydown="if(event.key==='Enter')tentarDesbloquear()"/>
+    <button onclick="tentarDesbloquear()">🔓 Entrar</button>
+    <div class="lock-erro" id="lockErro">Senha incorreta. Tente novamente.</div>
+  </div>
+</div>
+
+<div id="appContent">
 
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
@@ -97,6 +125,7 @@ footer strong{color:var(--azul2);}
   <span><span class="sync-dot" id="syncDot"></span><span id="syncTexto">Conectando ao Google Sheets...</span></span>
   <button class="btn-sync" onclick="carregarAno(anoSelecionado)">&#128260; Atualizar agora</button>
   <a class="btn-editar" id="linkEditar" href="#" target="_blank" rel="noopener">&#9999;&#65039; Editar dados na planilha</a>
+  <button class="btn-editar" onclick="gerarRelatorio()">&#128196; Relatório Mensal</button>
   <span class="sync-status">Os valores são preenchidos na planilha do Google Sheets e refletidos aqui automaticamente.</span>
 </div>
 
@@ -149,7 +178,39 @@ footer strong{color:var(--azul2);}
   "Um só Senhor, uma só fé, um só batismo." &nbsp;&middot;&nbsp; Ef 4:5
 </footer>
 
+<div id="relatorioImpressao"></div>
+
+</div>
+
 <script>
+// ── SENHA DE ACESSO ──────────────────────────────────────────────────────────
+// Proteção leve (não é segurança real, já que o site é estático). Para trocar a
+// senha, gere o hash SHA-256 dela (ex: no terminal `echo -n "novasenha" | shasum -a 256`)
+// e substitua o valor abaixo. Senha atual: inj2026
+const SENHA_HASH = "f5e69e491a6c37fcb034e9415afbfd1c39d928d30248eeaa9bd7d06f12a2f75e";
+
+async function sha256(texto) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function tentarDesbloquear() {
+  const valor = document.getElementById("senhaInput").value;
+  const hash = await sha256(valor);
+  if (hash === SENHA_HASH) {
+    sessionStorage.setItem("injDesbloqueado", "1");
+    desbloquear();
+    iniciarApp();
+  } else {
+    document.getElementById("lockErro").style.display = "block";
+  }
+}
+
+function desbloquear() {
+  document.getElementById("lockScreen").style.display = "none";
+  document.getElementById("appContent").style.display = "block";
+}
+
 // ── CONFIGURAÇÃO ────────────────────────────────────────────────────────────
 // Para acrescentar um novo ano orçamentário: duplique a planilha modelo no
 // Google Sheets (mantendo as abas por mês: Janeiro, Fevereiro, ...), compartilhe
@@ -536,10 +597,77 @@ function renderTabelaSaidas() {
   }).join("");
 }
 
+// ── RELATÓRIO MENSAL (PRESTAÇÃO DE CONTAS) ──────────────────────────────────
+function gerarRelatorio() {
+  if (!estado) return;
+  const dataGeracao = new Date().toLocaleDateString("pt-BR");
+  const linhaEntradas = estado.entradas.map(e => `
+    <tr><td>${e.n}</td><td>${e.nome}</td>
+      <td style="text-align:right">${fmt(e.budget)}</td>
+      <td style="text-align:right">${fmt(e.total)}</td></tr>`).join("");
+  const linhaSaidas = estado.saidas.map(s => `
+    <tr><td>${s.n}</td><td>${s.nome}</td>
+      <td style="text-align:right">${fmt(s.budget)}</td>
+      <td style="text-align:right">${fmt(s.total)}</td></tr>`).join("");
+  const b = estado.balanco;
+  const resultadoMes = (b.entradasMes||0) - (b.saidasMes||0);
+
+  document.getElementById("relatorioImpressao").innerHTML = `
+    <div style="font-family:Arial,sans-serif;color:#1c2a3a;padding:20px;">
+      <div style="text-align:center;margin-bottom:18px;">
+        <img src="logo-inj.png" style="width:64px"/>
+        <h2 style="color:#1a3a6b;margin:8px 0 2px;font-size:16px;">IGREJA DO NOME DE JESUS &mdash; INJ BRASIL</h2>
+        <h3 style="color:#1e5fa8;font-weight:600;font-size:13px;margin:0;">Relatório Mensal de Prestação de Contas</h3>
+        <p style="font-size:11px;color:#555;margin-top:4px;">Referência: ${estado.mesAtual} / ${estado.ano} &nbsp;&middot;&nbsp; Emitido em ${dataGeracao}</p>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px;">
+        <tr style="background:#1a3a6b;color:#fff;"><td colspan="4" style="padding:6px;font-weight:bold;">BALANÇO DO MÊS &mdash; ${estado.mesAtual.toUpperCase()}</td></tr>
+        <tr>
+          <td style="padding:6px;border:1px solid #ccc;">Entradas do Mês</td><td style="padding:6px;border:1px solid #ccc;text-align:right;">${fmt(b.entradasMes||0)}</td>
+          <td style="padding:6px;border:1px solid #ccc;">Saldo em Caixa</td><td style="padding:6px;border:1px solid #ccc;text-align:right;">${fmt(b.saldoCaixa||0)}</td>
+        </tr>
+        <tr>
+          <td style="padding:6px;border:1px solid #ccc;">Saídas do Mês</td><td style="padding:6px;border:1px solid #ccc;text-align:right;">${fmt(b.saidasMes||0)}</td>
+          <td style="padding:6px;border:1px solid #ccc;">Resultado do Mês</td><td style="padding:6px;border:1px solid #ccc;text-align:right;">${fmt(resultadoMes)}</td>
+        </tr>
+      </table>
+
+      <h4 style="color:#1a3a6b;border-left:4px solid #f9a825;padding-left:8px;font-size:12px;">Entradas &mdash; Acumulado do Ano</h4>
+      <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:16px;">
+        <tr style="background:#eee;"><th style="padding:5px;border:1px solid #ccc;">Nº</th><th style="padding:5px;border:1px solid #ccc;text-align:left;">Item</th><th style="padding:5px;border:1px solid #ccc;">Orçado Anual</th><th style="padding:5px;border:1px solid #ccc;">Realizado (YTD)</th></tr>
+        ${linhaEntradas}
+        <tr style="font-weight:bold;background:#f5f5f5;"><td colspan="2" style="padding:5px;border:1px solid #ccc;">TOTAL</td><td style="padding:5px;border:1px solid #ccc;text-align:right;">${fmt(estado.totais.entrada.budget)}</td><td style="padding:5px;border:1px solid #ccc;text-align:right;">${fmt(estado.totais.entrada.total)}</td></tr>
+      </table>
+
+      <h4 style="color:#1a3a6b;border-left:4px solid #f9a825;padding-left:8px;font-size:12px;">Saídas &mdash; Acumulado do Ano</h4>
+      <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:24px;">
+        <tr style="background:#eee;"><th style="padding:5px;border:1px solid #ccc;">Nº</th><th style="padding:5px;border:1px solid #ccc;text-align:left;">Item</th><th style="padding:5px;border:1px solid #ccc;">Orçado Anual</th><th style="padding:5px;border:1px solid #ccc;">Executado (YTD)</th></tr>
+        ${linhaSaidas}
+        <tr style="font-weight:bold;background:#f5f5f5;"><td colspan="2" style="padding:5px;border:1px solid #ccc;">TOTAL</td><td style="padding:5px;border:1px solid #ccc;text-align:right;">${fmt(estado.totais.saida.budget)}</td><td style="padding:5px;border:1px solid #ccc;text-align:right;">${fmt(estado.totais.saida.total)}</td></tr>
+      </table>
+
+      <div style="display:flex;justify-content:space-between;margin-top:70px;font-size:11px;">
+        <div style="text-align:center;width:45%;border-top:1px solid #333;padding-top:6px;">Tesoureiro(a)</div>
+        <div style="text-align:center;width:45%;border-top:1px solid #333;padding-top:6px;">Presidente / Pastor</div>
+      </div>
+    </div>`;
+
+  window.print();
+}
+
 // ── INIT ─────────────────────────────────────────────────────────────────────
 popularSeletorAno();
-carregarAno(anoSelecionado);
-setInterval(() => carregarAno(anoSelecionado), 5 * 60 * 1000);
+
+function iniciarApp() {
+  carregarAno(anoSelecionado);
+  setInterval(() => carregarAno(anoSelecionado), 5 * 60 * 1000);
+}
+
+if (sessionStorage.getItem("injDesbloqueado") === "1") {
+  desbloquear();
+  iniciarApp();
+}
 </script>
 </body>
 </html>
