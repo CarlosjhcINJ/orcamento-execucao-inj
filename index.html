@@ -221,12 +221,15 @@ async function fetchAba(sheetId, nomeAba) {
 
 function processarAba(aba) {
   const header = aba.header;
-  const idxBudget = 4, idxMedia = 5;
+  // Coluna orçada é a primeira célula não vazia do cabeçalho a partir da coluna C —
+  // funciona tanto se houver colunas em branco entre "ITENS" e "ENTRADAS/SAÍDAS" quanto se elas forem removidas.
+  const idxBudget = header.findIndex((h,i) => i >= 2 && (h||"").trim() !== "");
+  const idxMedia = idxBudget + 1;
   const idxTotal = header.findIndex(h => (h||"").trim().toUpperCase() === "TOTAL");
   const idxComment = header.findIndex(h => (h||"").toUpperCase().includes("COMENTARIO"));
   const fimMeses = idxTotal > -1 ? idxTotal : header.length;
   const colunasMeses = [];
-  for (let i = 6; i < fimMeses; i++) {
+  for (let i = idxBudget + 2; i < fimMeses; i++) {
     if ((header[i]||"").trim()) colunasMeses.push({ nome: header[i].trim(), idx: i });
   }
 
